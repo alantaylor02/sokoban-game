@@ -3,8 +3,6 @@ import gamelib
 from cola import Cola
 from pila import Pila
 
-ANCHO_VENTANA = 900
-ALTO_VENTANA = 900
 ANCHO_IMAGEN, ALTO_IMAGEN = 64, 64
 PISO = " "
 PARED = "#"
@@ -142,12 +140,11 @@ def pasar_grilla_a_tupla(grilla):
 
 def buscar_solucion(grilla_inicial):
     visitados = set()
-    numero_de_grilla = 1
-    direcciones = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    direcciones = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
-    return backtrack(grilla_inicial, visitados, numero_de_grilla, direcciones)
+    return backtrack(grilla_inicial, visitados, direcciones)
 
-def backtrack(grilla, visitados, numero_de_grilla, direcciones):
+def backtrack(grilla, visitados, direcciones):
 
     visitados.add(pasar_grilla_a_tupla(grilla))
 
@@ -162,7 +159,7 @@ def backtrack(grilla, visitados, numero_de_grilla, direcciones):
         if pasar_grilla_a_tupla(nuevo_estado) in visitados:
             continue
         
-        solucion_encontrada, direcciones_a_mover = backtrack(nuevo_estado, visitados, numero_de_grilla + 1, direcciones)
+        solucion_encontrada, direcciones_a_mover = backtrack(nuevo_estado, visitados, direcciones)
 
         if solucion_encontrada:
             return True, [direccion] + direcciones_a_mover
@@ -177,10 +174,8 @@ def guardar_pistas(grilla_actual, cola_pistas):
     
     for direccion in direcciones_a_mover:
 
-        nueva_grilla = soko.mover(grilla_actual, direccion)
-        cola_pistas.encolar(nueva_grilla)
-        grilla_actual = nueva_grilla
-
+        cola_pistas.encolar(direccion)
+        
     return cola_pistas
 
 def mostrar_pistas(grilla_actual, cola_pistas):
@@ -190,9 +185,10 @@ def mostrar_pistas(grilla_actual, cola_pistas):
     """
     if not cola_pistas.esta_vacia():
 
-        pista = cola_pistas.desencolar()
+        direccion_pista = cola_pistas.desencolar()
+        grilla_pista = soko.mover(grilla_actual, direccion_pista)
 
-        return pista
+        return grilla_pista
     
     return grilla_actual
 
@@ -218,7 +214,8 @@ def realizar_accion_segun_tecla(grilla, archivos_cargados, estado_actual, pilas,
     
     elif teclas[tecla_pulsada] == "DESHACER":
         grilla = deshacer(pila_jugadas, pila_deshechas)
-    
+        cola_pistas = Cola()
+
     elif teclas[tecla_pulsada] == "REHACER":
         grilla = rehacer(pila_jugadas, pila_deshechas)
     
@@ -231,7 +228,7 @@ def realizar_accion_segun_tecla(grilla, archivos_cargados, estado_actual, pilas,
             grilla = mostrar_pistas(grilla, cola_pistas)
 
             pila_jugadas.apilar(grilla)
-
+            
     else:
         grilla = soko.mover(grilla, obtener_direccion(teclas[tecla_pulsada]))
         pila_deshechas = Pila()
@@ -280,7 +277,8 @@ def main():
         pilas = pila_jugadas, pila_deshechas
         cola_pistas = Cola()
 
-        gamelib.resize(ANCHO_VENTANA, ALTO_VENTANA)
+        ancho_ventana, alto_ventana = ANCHO_IMAGEN * len(grilla[0]), ALTO_IMAGEN * len(grilla)
+        gamelib.resize(ancho_ventana, alto_ventana)
 
         while gamelib.is_alive():
 
@@ -320,6 +318,9 @@ def main():
                 pila_jugadas, pila_deshechas = crear_pilas_vacias_y_agregar_jugada(grilla)
                 pilas = pila_jugadas, pila_deshechas
                 cola_pistas = Cola()
+
+                ancho_ventana, alto_ventana = ANCHO_IMAGEN * len(grilla[0]), ALTO_IMAGEN * len(grilla)
+                gamelib.resize(ancho_ventana, alto_ventana)
 
     except FileNotFoundError as e:
         print("No se ha encontrado el archivo:", e)
