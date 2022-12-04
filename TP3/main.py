@@ -139,6 +139,7 @@ def pasar_grilla_a_tupla(grilla):
     return tuple(lista_res)
 
 def buscar_solucion(grilla_inicial):
+
     visitados = set()
     direcciones = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
@@ -169,15 +170,20 @@ def backtrack(grilla, visitados, direcciones):
 def guardar_pistas(grilla_actual, cola_pistas):
     """Recibe la grilla actual y la cola de pistas. Busca la solucion de la grilla actual
     y devuelve la cola de pistas con todos los movimientos necesarios para completar el nivel.
+    Si el nivel ya no puede ser completado, devuelve None.
     """
     solucion_encontrada, direcciones_a_mover = buscar_solucion(grilla_actual)
     
-    for direccion in direcciones_a_mover:
+    if solucion_encontrada:
 
-        cola_pistas.encolar(direccion)
+        for direccion in direcciones_a_mover:
+
+            cola_pistas.encolar(direccion)
         
-    return cola_pistas
-
+        return cola_pistas
+    
+    return None
+    
 def mostrar_pistas(grilla_actual, cola_pistas):
     """Recibe la grilla actual y la cola de pistas.
     Devuelve la grilla de la cola de pistas que esta al frente
@@ -221,13 +227,15 @@ def realizar_accion_segun_tecla(grilla, archivos_cargados, estado_actual, pilas,
     
     elif teclas[tecla_pulsada] == "PISTAS":
 
-        if cola_pistas.esta_vacia():
-            cola_pistas = guardar_pistas(grilla, cola_pistas)
+        if cola_pistas is not None:
 
-        else:    
-            grilla = mostrar_pistas(grilla, cola_pistas)
+            if cola_pistas.esta_vacia():
+                cola_pistas = guardar_pistas(grilla, cola_pistas)
 
-            pila_jugadas.apilar(grilla)
+            else:    
+                grilla = mostrar_pistas(grilla, cola_pistas)
+
+                pila_jugadas.apilar(grilla)
             
     else:
         grilla = soko.mover(grilla, obtener_direccion(teclas[tecla_pulsada]))
@@ -285,8 +293,11 @@ def main():
             gamelib.draw_begin()
             grilla_mostrar(grilla)
 
-            if not cola_pistas.esta_vacia():
-                gamelib.draw_text("Pistas disponibles", 70, 10)
+            if cola_pistas is None: # La cola de pistas no existe porque el nivel ya no se puede ganar, entonces mostrar el siguiente mensaje
+                gamelib.draw_text("Ya no se puede ganar, es necesario reiniciar", 5, 5, anchor='nw')
+
+            elif not cola_pistas.esta_vacia(): # Si la cola de pistas existe y no está vacía, mostrar el siguiente mensaje
+                gamelib.draw_text("Pistas disponibles", 5, 5, anchor='nw')
 
             gamelib.draw_end()
 
